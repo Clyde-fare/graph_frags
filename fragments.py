@@ -2,11 +2,6 @@ import itertools
 
     
 unwind = lambda l: (e for sl in l for e in sl)
-def view_frag(master, frag):
-    fragment = list(unwind(frag))
-    low = [i for i in range(len(master)) if i not in fragment]
-    params={'spacefill':('off', low)}
-    return view_jmol(master, label=True,width=500,height=400, params=[params])
 
 class Graph_frags(object):
     def __init__(self, master):
@@ -63,7 +58,7 @@ class Graph_frags(object):
             if not any([n in initial_indexes for n in self.master.graph.neighbors[i]]):
                 initial_indexes.append(i)
 
-        init_rings = (get_rings(self.master, i) for i in initial_indexes)
+        init_rings = (self.get_rings(i) for i in initial_indexes)
 
         rings = []
         for r in (r for lr in init_rings for r in lr):
@@ -82,6 +77,7 @@ class Graph_frags(object):
             list_n_combinations.append(itertools.combinations(neighbors, i))
 
         return itertools.chain(*list_n_combinations)
+
 
     def get_rings(self, initial):
         frags=self.length_6_frags(tuple([initial]))
@@ -131,15 +127,19 @@ class Graph_frags(object):
         
         
 def _test_1():
+    import ASE_utils
+    import math
+    from ase.io import read
+
     base_33_test = read('3_3_test2_flat_graphene.xyz')
-    base_33_test.rotate('x',pi/2)
-    base_33_test.rotate('z',pi/2)
+    base_33_test.rotate('x', math.pi/2)
+    base_33_test.rotate('z', math.pi/2)
 
     m_33_test = ASE_utils.to_molmod(base_33_test)
     m_33_test.set_default_graph()
-    
-    r=get_rings(m_33_test, 10)[-1]
-    g=Graph_frags(m_33_test)
+
+    g = Graph_frags(m_33_test)
+    r = g.get_rings(10)[-1]
     g.get_ring_fragments(initial_frags=[[r]])
     
     assert len(g.list_fragments) == 112
