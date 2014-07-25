@@ -183,7 +183,7 @@ def get_uniques(frags):
     return unique_atoms
 
 
-def _test_1():
+def _test_1a():
     from ase.io import read
     import ASE_utils
     from math import pi
@@ -203,7 +203,7 @@ def _test_1():
     assert len(list(g_it)) == 112
 
 
-def _test_2():
+def _test_1b():
     """Check no redundant fragments produced"""
 
     from ase.io import read
@@ -226,5 +226,5 @@ def _test_2():
     assert len(get_uniques(list_frags)) == len(list_frags)
 
 
-_test_1()
-_test_2()
+_test_1a()
+_test_1b()
