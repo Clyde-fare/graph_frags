@@ -93,42 +93,6 @@ class Graph_frags(object):
         rings.sort()
         return rings
 
-    def get_ring_fragments(self, initial_frags=None, allowed_rings=None):
-        """The list version"""
-        if not initial_frags:
-            initial_frags = [[self.get_rings(0)[0]]]
-
-        for frag in initial_frags:
-            self.list_fragments.append(frag)
-
-        if allowed_rings is None:
-            neighbors = unwind([self.get_ring_neighbors(r) for initial_frag in initial_frags for r in initial_frag])
-            current_rings = [sorted(r) for initial_frag in initial_frags for r in initial_frag]
-            allowed_rings = [sorted(r) for r in neighbors if sorted(r) not in current_rings]
-
-        new_frags = []
-
-        for frag in initial_frags:
-            new_neighbors = []
-            for ring in frag:
-                for n in self.get_ring_neighbors(ring):
-                    if n in allowed_rings and not n in new_neighbors:
-                        new_neighbors.append(n)
-
-            new_frags += [tuple(frag) + neighbor_combination for neighbor_combination
-                          in self.neighbor_combinations(new_neighbors)]
-
-        if not new_frags:
-            return
-
-        allowed_rings = []
-        for ring in new_frags[-1]:
-            for n in self.get_ring_neighbors(ring):
-                if n not in new_frags[-1] and n not in allowed_rings:
-                    allowed_rings.append(n)
-
-        self.get_ring_fragments(initial_frags=new_frags, allowed_rings=allowed_rings)
-
     def redundant_frag(self, frag):
         frag_atoms = set(unwind(frag))
 
@@ -222,7 +186,7 @@ def _test_1():
     import ASE_utils
     from math import pi
 
-    base_33_test = read('3_3_test2_flat_graphene.xyz')
+    base_33_test = read('test1.xyz')
     base_33_test.rotate('x', pi/2)
     base_33_test.rotate('z', pi/2)
 
