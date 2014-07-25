@@ -3,17 +3,13 @@ import itertools
 unwind = lambda l: (e for sl in l for e in sl)
 
 
-class Graph_frags(object):
+class GraphFrags(object):
     def __init__(self, master):
         self.master = master
         self.list_rings = self.get_all_rings()
         self.ring_lookup = self.get_ring_lookup()
-        self.list_fragments = []
         self.shell_lookup = []
         self.base_frag = tuple([])
-
-    def clear(self):
-        self.list_fragments = []
 
     def set_base_frag(self, frag):
         self.base_frag = tuple(frag)
@@ -25,8 +21,8 @@ class Graph_frags(object):
         if len(current_frag) >= n:
             return [current_frag]
 
-        neighbor_inds = self.master.graph.neighbors[current_frag[-1]]
-        for neighbor_ind in neighbor_inds:
+        neighbor_indices = self.master.graph.neighbors[current_frag[-1]]
+        for neighbor_ind in neighbor_indices:
             if neighbor_ind not in current_frag:
                 new_frag = current_frag + (neighbor_ind, )
                 frags += self.length_n_frags(new_frag, n)
@@ -50,13 +46,11 @@ class Graph_frags(object):
 
         lookup = {}
         for ring in rings:
-            lookup["-".join(map(str, ring))] = self._get_ring_neighbors(ring)
+            lookup[ring] = self._get_ring_neighbors(ring)
 
         return lookup
 
     def _get_ring_neighbors(self, initial_ring):
-        initial_ring.sort()
-
         initial_indexes = []
         for i in initial_ring:
             if not any([n in initial_indexes for n in self.master.graph.neighbors[i]]):
@@ -70,27 +64,21 @@ class Graph_frags(object):
                 rings.append(r)
         return rings
 
-    def get_ring_neighbors(self, initial_ring):
-        return self.ring_lookup["-".join(map(str, initial_ring))]
-
     def neighbor_combinations(self, neighbors):
-        list_n_combinations = []
         no_neighbors = len(neighbors)
 
         for i in range(1, no_neighbors+1):
-            list_n_combinations.append(itertools.combinations(neighbors, i))
-
-        return itertools.chain(*list_n_combinations)
+            for n_combination in itertools.combinations(neighbors, i):
+                yield n_combination
 
     def get_rings(self, initial):
         frags = self.length_n_frags(tuple([initial]))
         rings = []
         for f in frags:
             if initial in self.master.graph.neighbors[f[-1]]:
-                ring = sorted(f)
+                ring = frozenset(f)
                 if ring not in rings:
                     rings.append(ring)
-        rings.sort()
         return rings
 
     def redundant_frag(self, frag):
@@ -98,13 +86,13 @@ class Graph_frags(object):
 
         for ring in self.list_rings:
             if ring not in frag:
-                if set(ring).issubset(frag_atoms):
+                if ring.issubset(frag_atoms):
                     return True
         return False
 
     def get_frag_neighbors(self, frag):
         frag_neighbors = []
-        for n in unwind(self.get_ring_neighbors(r) for r in frag):
+        for n in unwind(self.ring_lookup[r] for r in frag):
             if n not in frag and n not in frag_neighbors:
                 frag_neighbors.append(n)
         return tuple(frag_neighbors)
@@ -145,7 +133,7 @@ class Graph_frags(object):
 
     def _gen_fragments(self, base_frag, allowed_rings=None):
         frag_neighbors = []
-        for n in (unwind([self.get_ring_neighbors(r) for r in base_frag])):
+        for n in (unwind(self.ring_lookup[r] for r in base_frag)):
             if n not in frag_neighbors:
                 frag_neighbors.append(n)
 
@@ -155,7 +143,7 @@ class Graph_frags(object):
         allowed_neighbors = [n for n in frag_neighbors if n in allowed_rings]
 
         for neighbor_combination in self.neighbor_combinations(allowed_neighbors):
-            frag = tuple(base_frag) + neighbor_combination
+            frag = base_frag + neighbor_combination
             if not self.redundant_frag(frag):
                 yield frag
 
@@ -181,6 +169,20 @@ class Graph_frags(object):
                 yield next_frag
 
 
+def get_uniques(frags):
+    atoms = lambda e: set(unwind(e))
+    list_atoms = []
+    for f in frags:
+        list_atoms.append(atoms(f))
+
+    unique_atoms = []
+    for a in list_atoms:
+        if a not in unique_atoms:
+            unique_atoms.append(a)
+
+    return unique_atoms
+
+
 def _test_1():
     from ase.io import read
     import ASE_utils
@@ -193,11 +195,36 @@ def _test_1():
     m_33_test = ASE_utils.to_molmod(base_33_test)
     m_33_test.set_default_graph()
 
-    g = Graph_frags(m_33_test)
+    g = GraphFrags(m_33_test)
     r = g.get_rings(10)[-1]
     g.set_base_frag([r])
     g_it = g.gen_fragments()
 
     assert len(list(g_it)) == 112
-    
+
+
+def _test_2():
+    """Check no redundant fragments produced"""
+
+    from ase.io import read
+    import ASE_utils
+    from math import pi
+
+    base_33_test = read('test1.xyz')
+    base_33_test.rotate('x', pi/2)
+    base_33_test.rotate('z', pi/2)
+
+    m_33_test = ASE_utils.to_molmod(base_33_test)
+    m_33_test.set_default_graph()
+
+    g = GraphFrags(m_33_test)
+    r = g.get_rings(10)[-1]
+    g.set_base_frag([r])
+    g_it = g.gen_fragments()
+
+    list_frags = list(g_it)
+    assert len(get_uniques(list_frags)) == len(list_frags)
+
+
 _test_1()
+_test_2()
