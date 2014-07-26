@@ -1,6 +1,6 @@
 import itertools
+from utils import unwind
 
-unwind = lambda l: (e for sl in l for e in sl)
 
 class GraphFrags(object):
     """Class to split a graphitic fragment into subfragments"""
@@ -144,7 +144,7 @@ class GraphFrags(object):
             return tuple([])
 
     def _gen_fragments(self, base_frag, allowed_rings=None):
-        """Generator of fragments build from base_frag and the list of rings specifed in allowed_rings"""
+        """Generator of fragments build from base_frag and the list of rings specified in allowed_rings"""
         frag_neighbors = []
         for n in (unwind(self.ring_lookup[r] for r in base_frag)):
             if n not in frag_neighbors:
@@ -180,65 +180,3 @@ class GraphFrags(object):
         for frag in generation_2:
             for next_frag in self.gen_fragments(frag, shell=shell):
                 yield next_frag
-
-
-def get_uniques(frags):
-    """Get unique fragments"""
-    atoms = lambda e: set(unwind(e))
-    list_atoms = []
-    for f in frags:
-        list_atoms.append(atoms(f))
-
-    unique_atoms = []
-    for a in list_atoms:
-        if a not in unique_atoms:
-            unique_atoms.append(a)
-
-    return unique_atoms
-
-
-def _test_1a():
-    """Tests the number of fragments found matches a known case"""
-    from ase.io import read
-    import ASE_utils
-    from math import pi
-
-    test_mol = read('test1.xyz')
-    test_mol.rotate('x', pi/2)
-    test_mol.rotate('z', pi/2)
-
-    m_test_mol = ASE_utils.to_molmod(test_mol)
-    m_test_mol.set_default_graph()
-
-    g = GraphFrags(m_test_mol)
-    r = g.get_rings(10)[-1]
-    g.set_base_frag([r])
-    g_it = g.gen_fragments()
-
-    assert len(list(g_it)) == 112
-
-
-def _test_1b():
-    """Tests no redundant fragments are produced"""
-    from ase.io import read
-    import ASE_utils
-    from math import pi
-
-    base_33_test = read('test1.xyz')
-    base_33_test.rotate('x', pi/2)
-    base_33_test.rotate('z', pi/2)
-
-    m_33_test = ASE_utils.to_molmod(base_33_test)
-    m_33_test.set_default_graph()
-
-    g = GraphFrags(m_33_test)
-    r = g.get_rings(10)[-1]
-    g.set_base_frag([r])
-    g_it = g.gen_fragments()
-
-    list_frags = list(g_it)
-    assert len(get_uniques(list_frags)) == len(list_frags)
-
-
-_test_1a()
-_test_1b()
