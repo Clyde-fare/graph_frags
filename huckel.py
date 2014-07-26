@@ -45,6 +45,6 @@ def huckel_e(frag, master):
     return eig_values.dot(electrons_per_level)
 
 
-def get_pair_stability(pair, frag, master):
+def get_pair_stability(frag, pair, master):
     cut_frag = [set(r)-pair for r in frag]
     return huckel_e(frag, master) - huckel_e(cut_frag, master)
