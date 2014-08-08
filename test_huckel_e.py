@@ -1,6 +1,6 @@
 import unittest
 from fragments import GraphFrags
-from huckel import get_pair_stability
+from huckel import get_atoms_stability
 from ase.io import read
 import ASE_utils
 from math import pi
@@ -27,8 +27,8 @@ class TestHuckel_e(unittest.TestCase):
         self.central_pair = {11, 12}
 
     def test_huckel_e(self):
-        p_stab = get_pair_stability(self.frags[-1], self.central_pair, self.g.master)
-        self.assertAlmostEquals(p_stab, -25.518101628268539)
+        p_stab = get_atoms_stability(self.frags[-1], self.central_pair, self.g.master)
+        self.assertAlmostEquals(p_stab, 25.518101628268539)
 
 
 if __name__ == '__main__':
