@@ -12,7 +12,7 @@ class GraphFrags(object):
         self.list_rings = self.get_all_rings()
 
     def set_base_frag(self, frag):
-        """Base fragment from which all fragments are generated from and to which all fragments are connected to"""
+        """Sets the fragment from which all fragments are generated from and to which all fragments are connected"""
         self.base_frag = tuple(frag)
         self.shell_lookup = self._get_shell_lookup()
 
@@ -89,14 +89,13 @@ class GraphFrags(object):
         return rings
 
     def redundant_frag(self, frag):
-        """Determines whether fragment frag contains holes - i.e. does not include a ring explicitly that is included implicitly because
-        all atoms in that ring are included in other rings that are included in the fragment"""
+        """Determines whether fragment 'frag' contains holes - i.e. does not include a ring explicitly that is included
+        implicitly because all atoms in that ring are included in other rings within the fragment"""
         frag_atoms = set(unwind(frag))
 
         for ring in self.list_rings:
-            if ring not in frag:
-                if ring.issubset(frag_atoms):
-                    return True
+            if ring not in frag and ring.issubset(frag_atoms):
+                return True
         return False
 
     def get_frag_neighbors(self, frag):
@@ -161,7 +160,7 @@ class GraphFrags(object):
                 yield frag
 
     def gen_fragments(self, origin_frag=None, shell=0):
-        """Recursively generates fragments starting from origin_frag that are part of shell shell"""
+        """Recursively generates fragments starting from origin_frag that are part of shell 'shell'"""
         if not origin_frag:
             origin_frag = self.base_frag
         else:

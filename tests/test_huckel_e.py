@@ -1,8 +1,9 @@
 import unittest
-from fragments import GraphFrags
-from huckel import get_atoms_stability
-from ase.io import read
 import ASE_utils
+import huckel
+from fragments import GraphFrags
+from ase.io import read
+from ase.structure import molecule
 from math import pi
 
 __author__ = 'clyde'
@@ -27,9 +28,14 @@ class TestHuckel_e(unittest.TestCase):
         self.central_pair = {11, 12}
 
     def test_huckel_e(self):
-        p_stab = get_atoms_stability(self.frags[-1], self.central_pair, self.g.master)
+        p_stab = huckel.get_atoms_stability(self.frags[-1], self.central_pair, self.g.master)
         self.assertAlmostEquals(p_stab, 25.518101628268539)
 
+    def test_huckel_e2(self):
+        ethene = molecule('C2H4')
+        m_ethene = ASE_utils.to_molmod(ethene)
+        m_ethene.graph.neighbors
+        h_e = huckel.huckel_e([{0, 1}], m_ethene)
 
-if __name__ == '__main__':
-    unittest.main()
+        self.assertAlmostEquals(h_e, 2*huckel.alpha + 2*huckel.beta)
+

@@ -4,16 +4,24 @@ import numpy as np
 from scipy import linalg
 from utils import unwind
 
+#params that define the huckel energy
+alpha, beta = -11.2, -0.7
 
 def huckel_e(frag, master):
-    alpha, beta = -11.2, -0.7
-    ns = {}
-    set_atoms = set(unwind(frag))
-    no_atoms = len(set_atoms)
+    """Compute the Huckel energy of a fragment"""
 
-    for ring in frag:
-            for i in ring:
-                ns[i] = [n for n in master.graph.neighbors[i] if n in set_atoms]
+    if frag:
+        ns = {}
+        set_atoms = set(unwind(frag))
+        no_atoms = len(set_atoms)
+
+        for ring in frag:
+                for i in ring:
+                    ns[i] = [n for n in master.graph.neighbors[i] if n in set_atoms]
+
+    else:
+        ns = master.graph.neighbors
+        no_atoms = len(ns)
 
     ks = sorted(ns.keys())
     h = np.zeros([len(ns), len(ns)])
@@ -46,5 +54,6 @@ def huckel_e(frag, master):
 
 
 def get_atoms_stability(frag, set_atoms, master):
+    """Compute the stability of a set of atoms within a fragment"""
     cut_frag = [set(r)-set_atoms for r in frag]
     return huckel_e(cut_frag, master) - huckel_e(frag, master)

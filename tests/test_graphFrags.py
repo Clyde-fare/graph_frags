@@ -50,6 +50,3 @@ class TestGraphFrags(unittest.TestCase):
 
         list_frags = list(frag_it)
         assert len(get_unique(list_frags)) == len(list_frags)
-
-if __name__ == '__main__':
-    unittest.main()
