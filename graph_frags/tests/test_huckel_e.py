@@ -1,7 +1,8 @@
 import unittest
-import ASE_utils
-import huckel
-from fragments import GraphFrags
+
+from graph_frags import huckel
+from graph_frags.fragments import GraphFrags
+from ase_extensions import ase_utils
 from ase.io import read
 from ase.structure import molecule
 from math import pi
@@ -16,7 +17,7 @@ class TestHuckel_e(unittest.TestCase):
         test_mol.rotate('x', pi/2)
         test_mol.rotate('z', pi/2)
 
-        m_test_mol = ASE_utils.to_molmod(test_mol)
+        m_test_mol = ase_utils.to_molmod(test_mol)
         m_test_mol.set_default_graph()
 
         self.g = GraphFrags(m_test_mol)
@@ -33,7 +34,7 @@ class TestHuckel_e(unittest.TestCase):
 
     def test_huckel_e2(self):
         ethene = molecule('C2H4')
-        m_ethene = ASE_utils.to_molmod(ethene)
+        m_ethene = ase_utils.to_molmod(ethene)
         m_ethene.graph.neighbors
         h_e = huckel.huckel_e([{0, 1}], m_ethene)
 

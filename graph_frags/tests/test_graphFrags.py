@@ -1,8 +1,8 @@
 import unittest
-from fragments import GraphFrags
-from utils import get_unique
+from graph_frags.fragments import GraphFrags
+from graph_frags.utils import get_unique
 from ase.io import read
-import ASE_utils
+from ase_extensions import ase_utils
 from math import pi
 
 __author__ = 'clyde'
@@ -13,7 +13,7 @@ class TestGraphFrags(unittest.TestCase):
         test_mol = read('test1.xyz')
         test_mol.rotate('x', pi/2)
         test_mol.rotate('z', pi/2)
-        m_test_mol = ASE_utils.to_molmod(test_mol)
+        m_test_mol = ase_utils.to_molmod(test_mol)
         m_test_mol.set_default_graph()
         self.mol_graph = GraphFrags(m_test_mol)
 

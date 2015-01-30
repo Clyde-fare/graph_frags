@@ -1,10 +1,9 @@
 package:
-  name: fragments
+  name: graph-frags
   version: 0.1
 
 source:
-  git_url: https://github.com/Clyde-fare/fragments.git
-#   path: ../
+  git_url: https://github.com/Clyde-fare/graph_frags.git
 
 build:
   number: 0
@@ -15,3 +14,15 @@ requirements:
     - setuptools
   run:
     - numpy
+    - scipy
+
+test:
+  requires:
+    - nose
+    - ase
+    - ase-extensions
+
+  imports:
+    - graph_frags
+
+

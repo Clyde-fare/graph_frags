@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-setup(name='fragments',
+setup(name='graph_frags',
       version='0.1',
-      packages=['fragments'],
+      packages=['graph_frags'],
       )
