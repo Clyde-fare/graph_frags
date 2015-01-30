@@ -5,6 +5,7 @@ from utils import unwind
 class GraphFrags(object):
     """Class to split a graphitic fragment into subfragments"""
     def __init__(self, master):
+        """Initialize with a master molmod molecule object where the default graph has been constructed"""
         self.master = master
         self.base_frag = tuple([])
         self.shell_lookup = []
