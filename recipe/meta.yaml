@@ -19,6 +19,7 @@ requirements:
 test:
   requires:
     - nose
+    - tests
     - ase
     - ase-extensions
 
