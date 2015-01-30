@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from graph_frags import huckel
 from graph_frags.fragments import GraphFrags
@@ -12,8 +13,11 @@ __author__ = 'clyde'
 
 class TestHuckel_e(unittest.TestCase):
     def setUp(self):
-
-        test_mol = read('test1.xyz')
+        #need to use __file__ rather than directly reading test1.xyz because nosetests usually
+        #gets run from the directory above tests and would break if we did not tell it that
+        #test1.xyz is in the same directory as the python file containing the tests
+        test_file1 = os.path.abspath(os.path.dirname(__file__)) + '/test1.xyz'
+        test_mol = read(test_file1)
         test_mol.rotate('x', pi/2)
         test_mol.rotate('z', pi/2)
 

@@ -12,6 +12,8 @@ requirements:
   build:
     - python
     - setuptools
+    - ase-extensions
+    - nose
   run:
     - numpy
     - scipy
@@ -19,7 +21,6 @@ requirements:
 test:
   requires:
     - nose
-    - tests
     - ase
     - ase-extensions
 

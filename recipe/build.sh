@@ -1,6 +1,7 @@
 #!/bin/bash
 
 $PYTHON setup.py install
+nosetests
 
 # Add more build steps here, if they are necessary.
 
