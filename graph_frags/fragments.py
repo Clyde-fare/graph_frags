@@ -4,6 +4,7 @@ from utils import unwind
 
 class GraphFrags(object):
     """Class to split a graphitic fragment into subfragments"""
+
     def __init__(self, master):
         """Initialize with a master molmod molecule object where the default graph has been constructed"""
         self.master = master
@@ -57,12 +58,7 @@ class GraphFrags(object):
 
     def _get_ring_neighbors(self, initial_ring):
         """"Returns a list of ring neighbors connected to initial_ring"""
-        initial_indexes = []
-        for i in initial_ring:
-            if not any([n in initial_indexes for n in self.master.graph.neighbors[i]]):
-                initial_indexes.append(i)
-
-        init_rings = (self.get_rings(i) for i in initial_indexes)
+        init_rings = (self.get_rings(i) for i in initial_ring)
 
         rings = []
         for r in (r for lr in init_rings for r in lr):
