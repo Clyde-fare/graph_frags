@@ -8,12 +8,11 @@ from math import pi
 
 __author__ = 'clyde'
 
-
 class TestGraphFrags(unittest.TestCase):
     def setUp(self):
-        #need to use __file__ rather than directly reading test1.xyz because nosetests usually
-        #gets run from the directory above tests and would break if we did not tell it that
-        #test1.xyz is in the same directory as the python file containing the tests
+        # need to use __file__ rather than directly reading test1.xyz because nosetests usually
+        # gets run from the directory above tests and would break if we did not tell it that
+        # test1.xyz is in the same directory as the python file containing the tests
         test_file1 = os.path.abspath(os.path.dirname(__file__)) + '/test1.xyz'
         test_mol = read(test_file1)
         test_mol.rotate('x', pi/2)
@@ -33,8 +32,8 @@ class TestGraphFrags(unittest.TestCase):
                                frozenset({9, 10, 17, 18, 19, 20}),
                                frozenset({1, 2, 3, 4, 11, 12}),
                                frozenset({4, 5, 12, 13, 14, 15}),
-                               frozenset({19, 20, 21, 22, 25, 26}),
-                               frozenset({13, 14, 21, 22, 23, 24}))
+                               frozenset({13, 14, 21, 22, 23, 24}),
+                               frozenset({19, 20, 21, 22, 25, 26}))
 
     def test_1a(self):
         """Tests the number of fragments found matches a known case"""
