@@ -33,6 +33,7 @@ class TestHuckel_e(unittest.TestCase):
         self.central_pair = {11, 12}
 
     def test_huckel_e(self):
+
         p_stab = huckel.get_atoms_stability(self.frags[-1], self.central_pair, self.g.master)
         self.assertAlmostEquals(p_stab, 25.518101628268539)
 
@@ -40,7 +41,8 @@ class TestHuckel_e(unittest.TestCase):
         ethene = molecule('C2H4')
         m_ethene = ase_utils.to_molmod(ethene)
         m_ethene.graph.neighbors
-        h_e = huckel.huckel_e([{0, 1}], m_ethene)
+        ethene_h = huckel.Huckel(m_ethene, [{0,1}])
+        h_e = ethene_h.huckel_e()
 
         self.assertAlmostEquals(h_e, 2*huckel.alpha + 2*huckel.beta)
 
