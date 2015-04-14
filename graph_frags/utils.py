@@ -16,3 +16,4 @@ def get_unique(frags):
             unique_atoms.append(a)
 
     return unique_atoms
+

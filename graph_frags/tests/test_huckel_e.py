@@ -39,16 +39,14 @@ class TestHuckel_e(unittest.TestCase):
     def test_huckel_e2(self):
         ethene = molecule('C2H4')
         m_ethene = ase_utils.to_molmod(ethene)
-        m_ethene.graph.neighbors
         ethene_h = huckel.Huckel(m_ethene, [{0,1}])
-        h_e = ethene_h.huckel_e()
+        h_e = ethene_h.huckel_e
 
         self.assertAlmostEquals(h_e, 2*huckel.alpha + 2*huckel.beta)
 
     def test_huckel_e3(self):
         benzene = molecule('C6H6')
         m_benzene = ase_utils.to_molmod(benzene)
-        m_benzene.graph.neighbors
         benzene_h = huckel.Huckel(m_benzene)
         bond_order = benzene_h.bond_order({1, 2})
 

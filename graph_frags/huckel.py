@@ -10,41 +10,50 @@ alpha, beta = -11.2, -0.7
 
 class Huckel(object):
     def __init__(self, master, frag=None):
-        self.frag = frag
+        #contains the molmod molecule
         self.master = master
 
-        self.neighbour_matrix = self.get_neighbour_matrix()
-        self.no_atoms = len(self.neighbour_matrix.keys())
-        self.bond_order_matrix = self.get_bond_order_matrix()
 
-    def get_neighbour_matrix(self):
+        #defines indices of the atoms of interest
+        if frag:
+            self.frag = frag
+        else:
+            # set fragment to all sp2 carbons (assumes all atoms with three bonds are sp2 carbons)
+            self.frag = [[k for k in self.master.graph.neighbors if len(self.master.graph.neighbors[k]) == 3]]
+
+        self._neighbour_matrix = None
+        self._bond_order_matrix = None
+        self._electrons_per_level = None
+        self._occupied_eigs = None
+        self._unoccupied_eigs = None
+        self._huckel_eigs = None
+        
+        self.no_atoms = len(self.neighbour_matrix.keys())
+        
+    @property
+    def neighbour_matrix(self):
         """Get the neighbour matrix associated with the sp2 carbons within a particular fragment"""
 
-        if self.frag:
-            ns = {}
-            # sp2 atoms in fragment (assumes all atoms with three bonds are sp2 carbons)
-            set_atoms = [a for a in set(unwind(self.frag)) if 1 < len(self.master.graph.neighbors[a]) == 3]
-            for ring in self.frag:
-                for i in ring:
-                    # include sp2 atoms in the fragment
-                    if i in set_atoms:
-                        ns[i] = [n for n in self.master.graph.neighbors[i] if n in set_atoms]
+        if self._neighbour_matrix is not None:
+            return self._neighbour_matrix
+        
+        neighbour_matrix = {}
+        # sp2 atoms in fragment (assumes all atoms with three bonds are sp2 carbons)
+        set_atoms = [a for a in set(unwind(self.frag)) if len(self.master.graph.neighbors[a]) == 3]
+        
+        for a in set_atoms:
+            neighbour_matrix[a] = [n for n in self.master.graph.neighbors[a] if n in set_atoms]
+        
+        self._neighbour_matrix = neighbour_matrix
+        return self._neighbour_matrix
 
-        else:
-            # dict of atom:[atom_neighbours] for p2 atoms in total molecule
-            # (assumes all atoms with three bonds are sp2 carbons)
-            ns = {}
-
-            set_atoms = [k for k in self.master.graph.neighbors if len(self.master.graph.neighbors[k]) == 3]
-
-            for k in set_atoms:
-                ns[k] = [n for n in self.master.graph.neighbors[k] if n in set_atoms]
-
-        return ns
-
-    def get_bond_order_matrix(self):
+    @property
+    def bond_order_matrix(self):
         """Convert neighbour matrix into the secular matrix we need to diagonalize"""
 
+        if self._bond_order_matrix is not None:
+            return self._bond_order_matrix
+            
         list_carbons = sorted(self.neighbour_matrix.keys())
         h = np.zeros([len(self.neighbour_matrix), len(self.neighbour_matrix)])
 
@@ -54,20 +63,71 @@ class Huckel(object):
                 j = list_carbons.index(k2)
                 h[i][j] = 1
 
-        return h
+        self._bond_order_matrix = h
+        return self._bond_order_matrix
 
+    @property
     def huckel_eigs(self):
         """Compute the Huckel eigenvalues/eigenvectors"""
 
-        h = self.get_bond_order_matrix() * beta
+        if self._huckel_eigs is not None:
+            return self._huckel_eigs
+ 
+        h = self.bond_order_matrix * beta
+        np.fill_diagonal(h, alpha)
+        self._huckel_eigs = linalg.eigh(h)
+        return self._huckel_eigs
 
-        for i in range(self.no_atoms):
-            h[i][i] = alpha
+    @property
+    def occupied_eigs(self):
+        """Return occupied oribtals in order of energy taking
+        into account that we doubly occupy orbitals"""
+        if self._occupied_eigs is not None:
+            return self._occupied_eigs
+            
+        eigs = self.huckel_eigs[1].T
 
-        return linalg.eigh(h)
+        alpha_eigs, beta_eigs = [], []
 
-    def get_electrons_per_level(self):
+        for ne, eig in zip(self.electrons_per_level, eigs):
+            if ne == 2:
+                alpha_eigs.append(eig)
+                beta_eigs.append(eig)
 
+            elif ne == 1:
+                alpha_eigs.append(eig)
+
+        self._occupied_eigs = list(unwind(zip(alpha_eigs, beta_eigs)))
+        return self._occupied_eigs
+        
+    @property
+    def unoccupied_eigs(self):
+        """Return unoccupied orbitals in order of energy taking
+        into account that we doubly occupy orbitals"""
+        if self._unoccupied_eigs is not None:
+            return self._unoccupied_eigs
+            
+        eigs = self.huckel_eigs[1].T
+
+        alpha_eigs, beta_eigs = [], []
+
+        for ne, eig in zip(self.electrons_per_level, eigs):
+            if ne == 1:
+                beta_eigs.append(eig)
+
+            elif ne == 0:
+                alpha_eigs.append(eig)
+                beta_eigs.append(eig)
+
+        self._unoccupied_eigs = list(unwind(zip(beta_eigs, alpha_eigs)))
+        return self._unoccupied_eigs
+
+    @property
+    def electrons_per_level(self):
+        """Determine number electrons occupying each eigenvector"""
+        if self._electrons_per_level is not None:
+            return self._electrons_per_level
+            
         electrons_per_level = []
         last_atom = False
         if self.no_atoms % 2:
@@ -81,28 +141,30 @@ class Huckel(object):
         for i in range(self.no_atoms/2):
             electrons_per_level.append(0)
 
-        return np.array(electrons_per_level)
+        self._electrons_per_level = np.array(electrons_per_level)
+        return self._electrons_per_level
 
+    @property
     def huckel_e(self):
         """Compute the Huckel energy of a fragment"""
 
-        eig_values, eig_vectors = self.huckel_eigs()
+        eig_values, eig_vectors = self.huckel_eigs
 
         # we doubly occupy all energy levels except if there are an odd number of atoms
         # in which case we singly occupy the homo
-        electrons_per_level = self.get_electrons_per_level()
+        electrons_per_level = self.electrons_per_level
 
         return eig_values.dot(electrons_per_level)
 
     def bond_order(self, bond_pair):
         """Compute the Huckel bond order associated with a particular bond pair within the fragment"""
-        eigen_values, eig_vectors = self.huckel_eigs()
+        eigen_values, eig_vectors = self.huckel_eigs
         
         list_carbons = sorted(self.neighbour_matrix.keys())
         bond_ids = [list_carbons.index(bond_c) for bond_c in bond_pair]
 
         bond_order = 0
-        for e_n, eig_vec in zip(self.get_electrons_per_level(), eig_vectors.T):
+        for e_n, eig_vec in zip(self.electrons_per_level, eig_vectors.T):
             bond_order += e_n*eig_vec[bond_ids[0]]*eig_vec[bond_ids[1]]
 
         return bond_order
@@ -113,14 +175,14 @@ def get_atoms_stability(frag, set_atoms, master):
     cut_frag = [set(r)-set_atoms for r in frag]
     frag_h = Huckel(master, frag)
     cut_frag_h = Huckel(master, cut_frag)
-    return cut_frag_h.huckel_e() - frag_h.huckel_e()
+    return cut_frag_h.huckel_e - frag_h.huckel_e
 
 # not trivially invertible i.e. vec_to_frag not easy
 def frag_to_vec(frag, master, size=None):
     """Create vector representation of a PAH fragment
     vector is formed of the sorted eigenvalues of the neighbour (bond)  matrix of the fragment"""
 
-    h = Huckel(master, frag).get_bond_order_matrix()
+    h = Huckel(master, frag).bond_order_matrix()
 
     no_atoms = len(h)
     if size:
